@@ -1,28 +1,28 @@
 {
   "version": "36.0.0",
   "artifacts": {
-    "CdkStack.assets": {
+    "MycdkStack.assets": {
       "type": "cdk:asset-manifest",
       "properties": {
-        "file": "CdkStack.assets.json",
+        "file": "MycdkStack.assets.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
       }
     },
-    "CdkStack": {
+    "MycdkStack": {
       "type": "aws:cloudformation:stack",
       "environment": "aws://unknown-account/unknown-region",
       "properties": {
-        "templateFile": "CdkStack.template.json",
+        "templateFile": "MycdkStack.template.json",
         "terminationProtection": false,
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/7b757c3fda0f5ed97cd17428a85e4f308ae6b3fc49cfd3c71aef1e88367ebd68.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/3ab42c12885641f977c1bf0360a255da41b06ad4343af337f4b20d278eaa4ecb.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
-          "CdkStack.assets"
+          "MycdkStack.assets"
         ],
         "lookupRole": {
           "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-${AWS::Region}",
@@ -31,41 +31,35 @@
         }
       },
       "dependencies": [
-        "CdkStack.assets"
+        "MycdkStack.assets"
       ],
       "metadata": {
-        "/CdkStack/CdkQueue/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "CdkQueueBA7F247D"
-          }
-        ],
-        "/CdkStack/CDKMetadata/Default": [
+        "/MycdkStack/CDKMetadata/Default": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CDKMetadata"
           }
         ],
-        "/CdkStack/CDKMetadata/Condition": [
+        "/MycdkStack/CDKMetadata/Condition": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CDKMetadataAvailable"
           }
         ],
-        "/CdkStack/BootstrapVersion": [
+        "/MycdkStack/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "BootstrapVersion"
           }
         ],
-        "/CdkStack/CheckBootstrapVersion": [
+        "/MycdkStack/CheckBootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CheckBootstrapVersion"
           }
         ]
       },
-      "displayName": "CdkStack"
+      "displayName": "MycdkStack"
     },
     "Tree": {
       "type": "cdk:tree",

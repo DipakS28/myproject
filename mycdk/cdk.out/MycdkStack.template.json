@@ -1,23 +1,12 @@
 {
  "Resources": {
-  "CdkQueueBA7F247D": {
-   "Type": "AWS::SQS::Queue",
-   "Properties": {
-    "VisibilityTimeout": 300
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "CdkStack/CdkQueue/Resource"
-   }
-  },
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/yWIWwqEMAwAz+J/G6sg+O8JdA+w1DZC1E1Z0+qHeHdfMDDDlFBUBkxmN9HOT3qmHvZPtG5S1/rKX2BvEyZUzcBPHHd1KCEt7rlNYE+RAh+Kg0cYJV+LGi5MNgqRXhJH+iF0r09SiNNScwAAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/zPSMzQ10DNQTCwv1k1OydbNyUzSqw4uSUzO1nFOywtKLc4vLUpOBbGd8/NSMksy8/NqdfLyU1L1sor1ywwt9IDIQDGrODNTt6g0ryQzN1UvCEIDAC2mlFRaAAAA"
    },
    "Metadata": {
-    "aws:cdk:path": "CdkStack/CDKMetadata/Default"
+    "aws:cdk:path": "MycdkStack/CDKMetadata/Default"
    },
    "Condition": "CDKMetadataAvailable"
   }

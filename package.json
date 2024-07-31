@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@aws-cdk/aws-ec2": "^1.203.0",
+    "@aws-cdk/aws-ecs": "^1.203.0",
+    "@aws-cdk/aws-ecs-patterns": "^1.203.0",
+    "@aws-cdk/aws-rds": "^1.203.0"
+  }
+}

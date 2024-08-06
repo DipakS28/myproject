@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import json
+import os
+import boto3
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +29,7 @@ SECRET_KEY = 'django-insecure-lcf5mb^b!gl#vydz@j8%=&%70j2#v0il#&0zx%#$f88t#m*#_a
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -77,13 +81,36 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
+# Fetching database credentials from AWS Secrets Manager
+try:
+    client = boto3.client('secretsmanager', region_name='us-east-1')  
+    secret_name = "AuroraSecret41E6E877-S7DZ1ug57V2h"  
+    secret_value = client.get_secret_value(SecretId=secret_name)
+    secret = json.loads(secret_value['SecretString'])
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'demos', 
+            'USER': secret['username'],
+            'PASSWORD': secret['password'],
+            'HOST': os.environ.get('DATABASE_HOST', 'mycdkstack-dbcluster224236ef-3olm2h3tfqoz.cluster-ckvolc5n1pnc.us-east-1.rds.amazonaws.com'),  # Replace with your Aurora DB cluster endpoint if not using environment variables
+            'PORT': os.environ.get('DATABASE_PORT', '5432'),
+        }
+    }
+except (NoCredentialsError, PartialCredentialsError):
+    raise RuntimeError("AWS credentials not found. Ensure they are available to access Secrets Manager.")
+except client.exceptions.ResourceNotFoundException:
+    raise RuntimeError("Secrets Manager secret not found. Ensure the secret exists and the name is correct.")
+except Exception as e:
+    raise RuntimeError(f"Failed to retrieve database credentials: {str(e)}")
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

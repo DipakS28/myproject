@@ -91,7 +91,7 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 # Fetching database credentials from AWS Secrets Manager
 try:
     client = boto3.client('secretsmanager', region_name='us-east-1')  
-    secret_name = "AuroraSecret41E6E877-S7DZ1ug57V2h"  
+    secret_name = "mydbSecret"  
     secret_value = client.get_secret_value(SecretId=secret_name)
     secret = json.loads(secret_value['SecretString'])
     
@@ -101,8 +101,8 @@ try:
             'NAME': 'demos', 
             'USER': secret['username'],
             'PASSWORD': secret['password'],
-            'HOST': os.environ.get('DATABASE_HOST', 'mycdkstack-dbcluster224236ef-3olm2h3tfqoz.cluster-ckvolc5n1pnc.us-east-1.rds.amazonaws.com'),  # Replace with your Aurora DB cluster endpoint if not using environment variables
-            'PORT': os.environ.get('DATABASE_PORT', '5432'),
+            'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
+            'PORT': os.environ.get('DATABASE_PORT', '9000'),
         }
     }
 except (NoCredentialsError, PartialCredentialsError):

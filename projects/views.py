@@ -8,6 +8,7 @@ def project_index(request):
     context = {
         "projects": projects
     }
+    print(context)
     return render(request, "projects/project_index.html", context)
 
 def project_detail(request, pk):

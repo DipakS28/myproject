@@ -25,6 +25,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 
 
 
+
 export class MycdkStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -53,14 +54,27 @@ export class MycdkStack extends cdk.Stack {
 
 
     //rds Sec Group
+    // const intrnalTraffic = new ec2.SecurityGroup(this, 'internalTraffic', {
+    //   vpc: vpc,
+    //   securityGroupName: 'InternalTraffic',
+    //   description: 'Internal VPC traffic',
+    // });
+
+    // intrnalTraffic.addIngressRule(ec2.Peer.securityGroupId(intrnalTraffic.securityGroupId), ec2.Port.allTraffic(), 'Internal Traffic rule');
+    // intrnalTraffic.addEgressRule(ec2.Peer.securityGroupId(intrnalTraffic.securityGroupId), ec2.Port.allTraffic(), 'Internal Traffic rule');
+
     const intrnalTraffic = new ec2.SecurityGroup(this, 'internalTraffic', {
       vpc: vpc,
       securityGroupName: 'InternalTraffic',
       description: 'Internal VPC traffic',
+      disableInlineRules: true,
     });
 
-    intrnalTraffic.addIngressRule(ec2.Peer.securityGroupId(intrnalTraffic.securityGroupId), ec2.Port.allTraffic(), 'Internal Traffic rule');
-    intrnalTraffic.addEgressRule(ec2.Peer.securityGroupId(intrnalTraffic.securityGroupId), ec2.Port.allTraffic(), 'Internal Traffic rule');
+    const intrnalTrafficId = intrnalTraffic.securityGroupId
+
+    //May have to run later
+    intrnalTraffic.addIngressRule(ec2.Peer.securityGroupId(intrnalTrafficId), ec2.Port.allTraffic(), 'Internal Traffic rule');
+    intrnalTraffic.addEgressRule(ec2.Peer.securityGroupId(intrnalTrafficId), ec2.Port.allTraffic(), 'Internal Traffic rule');
 
     //New key pair
     // const keyPair = new ec2.KeyPair(this, 'KeyPair', {
@@ -122,7 +136,7 @@ export class MycdkStack extends cdk.Stack {
         instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM),
         autoMinorVersionUpgrade: true,
         publiclyAccessible: false,
-        securityGroups: [bastionSecurityGroup, intrnalTraffic],
+        securityGroups: [bastionSecurityGroup,dbSecurityGroup],
         vpcSubnets: vpc.selectSubnets({
           subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
         }),
@@ -146,9 +160,6 @@ export class MycdkStack extends cdk.Stack {
 
 
 
-
-
-
     const repository = new ecr.Repository(this, "workshop-api", {
       repositoryName: "workshop-api"
     });
@@ -156,141 +167,172 @@ export class MycdkStack extends cdk.Stack {
 
 
 
-    // const cluster = new ecs.Cluster(this, "MyCluster", {
-    //   vpc: vpc
-    // });
-
-    // const executionRolePolicy = new iam.PolicyStatement({
-    //   effect: iam.Effect.ALLOW,
-    //   resources: ['*'],
-    //   actions: [
-    //     "ecr:GetAuthorizationToken",
-    //     "ecr:BatchCheckLayerAvailability",
-    //     "ecr:GetDownloadUrlForLayer",
-    //     "ecr:BatchGetImage",
-    //     "logs:CreateLogStream",
-    //     "logs:PutLogEvents"
-    //   ]
-    // });
-
-    // const fargateTaskDefinition = new ecs.FargateTaskDefinition(this, 'ApiTaskDefinition', {
-    //   memoryLimitMiB: 512,
-    //   cpu: 256,
-    // });
-    // fargateTaskDefinition.addToExecutionRolePolicy(executionRolePolicy);
-    // fargateTaskDefinition.addToTaskRolePolicy(new iam.PolicyStatement({
-    //   effect: iam.Effect.ALLOW,
-    //   actions: [
-    //     'rds:DescribeDBInstances',
-    //     'secretsmanager:GetSecretValue',
-    //     'secretsmanager:DescribeSecret',
-    //   ],
-    //   resources: ['*'],
-    // }));
-
-    // // const secret = new secretsmanager.Secret(this, 'DbCredentials', {
-    // //   secretName: 'db-credentials',
-    // //   generateSecretString: {
-    // //     secretStringTemplate: JSON.stringify({ username: 'dbadmin' }),
-    // //     generateStringKey: 'password',
-    // //     excludeCharacters: '"@/\\',
-    // //   },
-    // // });
 
 
-    // const container = fargateTaskDefinition.addContainer("backend", {
-    //   // Use an image from Amazon ECR
-    //   image: ecs.ContainerImage.fromRegistry(repository.repositoryUri),
-    //   logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'workshop-api' }),
-    //   environment: {
-    //     'DATABASE_HOST': dbCluster.clusterEndpoint.hostname,
-    //     'DATABASE_PORT': '5432',
-    //     'DATABASE_NAME': 'demos',
+    const cluster = new ecs.Cluster(this, "MyCluster", {
+      vpc: vpc
+    });
+
+    const executionRolePolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: ['*'],
+      actions: [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+    });
+
+    const fargateTaskDefinition = new ecs.FargateTaskDefinition(this, 'ApiTaskDefinition', {
+      memoryLimitMiB: 512,
+      cpu: 256,
+    });
+    fargateTaskDefinition.addToExecutionRolePolicy(executionRolePolicy);
+    fargateTaskDefinition.addToTaskRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'rds:DescribeDBInstances',
+        'secretsmanager:GetSecretValue',
+        'secretsmanager:DescribeSecret',
+      ],
+      resources: ['*'],
+    }));
+
+    // const secret = new secretsmanager.Secret(this, 'DbCredentials', {
+    //   secretName: 'db-credentials',
+    //   generateSecretString: {
+    //     secretStringTemplate: JSON.stringify({ username: 'dbadmin' }),
+    //     generateStringKey: 'password',
+    //     excludeCharacters: '"@/\\',
     //   },
-    //   secrets:
-    //   {
-    //     'DATABASE_USER': ecs.Secret.fromSecretsManager(dbsecret, 'username'),
-    //     'DATABASE_PASSWORD': ecs.Secret.fromSecretsManager(dbsecret, 'password'),
-    //   }
-
-
-    // });
-
-    // container.addPortMappings({
-    //   containerPort: 8000
     // });
 
 
+    const container = fargateTaskDefinition.addContainer("backend", {
+      // Use an image from Amazon ECR
+      image: ecs.ContainerImage.fromRegistry(repository.repositoryUri),
+      logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'workshop-api' }),
+      environment: {
+        'DATABASE_HOST': dbCluster.clusterEndpoint.hostname,
+        'DATABASE_PORT': '5432',
+        'DATABASE_NAME': 'demos',
+      },
+      secrets:
+      {
+        'DATABASE_USER': ecs.Secret.fromSecretsManager(dbsecret, 'username'),
+        'DATABASE_PASSWORD': ecs.Secret.fromSecretsManager(dbsecret, 'password'),
+      }
+
+
+    });
+
+    container.addPortMappings({
+      containerPort: 8000
+    });
+
+    //adding policy to retrieve secret
+    container.addToExecutionPolicy(
+      new iam.PolicyStatement(
+        {
+          actions: ["ecr:GetAuthorizationToken", "ecr:BatchCheckLayerAvailability", "ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage", "logs:CreateLogStream", "logs:PutLogEvents"],
+          effect: iam.Effect.ALLOW,
+          resources: [repository.repositoryArn],
+        }
+      )
+    );
+
+
+    container.addToExecutionPolicy(
+      new iam.PolicyStatement(
+        {
+          actions: [
+            "secretsmanager:GetResourcePolicy",
+            "secretsmanager:GetSecretValue",
+            "secretsmanager:DescribeSecret",
+            "secretsmanager:ListSecrets",
+            "kms:Decrypt"],
+          effect: iam.Effect.ALLOW,
+          resources: [dbsecret.secretArn],
+        }
+      )
+    );
+
+
+
+    const sg_service = new ec2.SecurityGroup(this, 'MySGService', { vpc: vpc });
+    sg_service.addIngressRule(ec2.Peer.ipv4('0.0.0.0/0'), ec2.Port.tcp(8000));
+    sg_service.addEgressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(8000));
+
+    const service = new ecs.FargateService(this, 'Service', {
+      cluster,
+      taskDefinition: fargateTaskDefinition,
+      enableExecuteCommand: true,
+      desiredCount: 2,
+      assignPublicIp: true,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PUBLIC,
+      },
+      securityGroups: [sg_service, intrnalTraffic]
+
+    });
+
+
+    // Setup AutoScaling policy
+    const scaling = service.autoScaleTaskCount({ maxCapacity: 6, minCapacity: 2 });
+    scaling.scaleOnCpuUtilization('CpuScaling', {
+      targetUtilizationPercent: 50,
+      scaleInCooldown: Duration.seconds(60),
+      scaleOutCooldown: Duration.seconds(60)
+    });
+
+    const lb = new elbv2.ApplicationLoadBalancer(this, 'ALB', {
+      vpc,
+      internetFacing: true
+    });
+
+    const listener = lb.addListener('Listener', {
+      port: 80,
+    });
+
+    listener.addTargets('Target', {
+      port: 80,
+      targets: [service],
+      healthCheck: { path: '/', healthyHttpCodes: '200-302' },
+    });
+
+    listener.connections.allowDefaultPortFromAnyIpv4('Open to the world');
 
 
 
 
-    // const sg_service = new ec2.SecurityGroup(this, 'MySGService', { vpc: vpc });
-    // sg_service.addIngressRule(ec2.Peer.ipv4('0.0.0.0/0'), ec2.Port.tcp(8000));
 
-    // const service = new ecs.FargateService(this, 'Service', {
-    //   cluster,
-    //   taskDefinition: fargateTaskDefinition,
-    //   enableExecuteCommand: true,
-    //   desiredCount: 2,
-    //   assignPublicIp: false,
-    //   securityGroups: [sg_service,intrnalTraffic]
+
+
+
+    // Optionally, create an S3 bucket for CloudFront logging
+    // const bucket = new s3.Bucket(this, 'MyCloudFrontLogs', {
+    //   removalPolicy: cdk.RemovalPolicy.DESTROY,
+    //   autoDeleteObjects: true,
     // });
 
+    // Create CloudFront distribution
+    const distribution = new cloudfront.Distribution(this, 'MyDistribution', {
+      defaultBehavior: {
+        origin: new cloudfront_origins.LoadBalancerV2Origin(lb, {
+          protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      },
+      // logBucket: bucket,
+      logIncludesCookies: true,
+    });
 
-    // // Setup AutoScaling policy
-    // const scaling = service.autoScaleTaskCount({ maxCapacity: 6, minCapacity: 2 });
-    // scaling.scaleOnCpuUtilization('CpuScaling', {
-    //   targetUtilizationPercent: 50,
-    //   scaleInCooldown: Duration.seconds(60),
-    //   scaleOutCooldown: Duration.seconds(60)
-    // });
-
-    // const lb = new elbv2.ApplicationLoadBalancer(this, 'ALB', {
-    //   vpc,
-    //   internetFacing: true
-    // });
-
-    // const listener = lb.addListener('Listener', {
-    //   port: 80,
-    // });
-
-    // listener.addTargets('Target', {
-    //   port: 80,
-    //   targets: [service],
-    //   healthCheck: { path: '/', healthyHttpCodes: '200-302' },
-    // });
-
-    // listener.connections.allowDefaultPortFromAnyIpv4('Open to the world');
-
-
-
-
-
-
-
-
-    // // Optionally, create an S3 bucket for CloudFront logging
-    // // const bucket = new s3.Bucket(this, 'MyCloudFrontLogs', {
-    // //   removalPolicy: cdk.RemovalPolicy.DESTROY,
-    // //   autoDeleteObjects: true,
-    // // });
-
-    // // Create CloudFront distribution
-    // const distribution = new cloudfront.Distribution(this, 'MyDistribution', {
-    //   defaultBehavior: {
-    //     origin: new cloudfront_origins.LoadBalancerV2Origin(lb, {
-    //       protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
-    //     }),
-    //     viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-    //   },
-    //   // logBucket: bucket,
-    //   logIncludesCookies: true,
-    // });
-
-    // new cdk.CfnOutput(this, 'CloudFrontURL', {
-    //   value: distribution.distributionDomainName,
-    // });
+    new cdk.CfnOutput(this, 'CloudFrontURL', {
+      value: distribution.distributionDomainName,
+    });
 
 
 
